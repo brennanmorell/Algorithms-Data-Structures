@@ -1,0 +1,154 @@
+public class ClosestPairDC {
+    
+    public final static double INF = java.lang.Double.POSITIVE_INFINITY;
+
+    //
+    // findClosestPair()
+    //
+    // Given a collection of nPoints points, find and ***print***
+    //  * the closest pair of points
+    //  * the distance between them
+    // in the form "DC (x1, y1) (x2, y2) distance"
+    //
+    
+    // INPUTS:
+    //  - points sorted in nondecreasing order by X coordinate
+    //  - points sorted in nondecreasing order by Y coordinate
+    //  
+    public static void findClosestPair(XYPoint pointsByX[], XYPoint pointsByY[], boolean print)
+    {
+    	
+    	XYPoint[] closestResult = closestPairRecurse(pointsByX, pointsByY, pointsByX.length);
+    	
+    	double distanceResult = closestResult[0].dist(closestResult[1]);
+    	
+    	if(distanceResult == INF)
+    	{
+    		System.out.println("DC " + distanceResult);
+    	}
+    	else
+    		System.out.println("DC " + closestResult[0].toString() + " " + closestResult[1].toString());
+    }
+    
+    public static XYPoint[] closestPairRecurse(XYPoint[] pointsByX, XYPoint[] pointsByY, int n)
+    {
+    	if(pointsByX.length == 1)
+    		return new XYPoint[2];
+    	if(pointsByX.length == 2)
+    		return pointsByX;
+    	
+    	//int mid = (pointsByX.length - (pointsByX.length/2))-1;
+    	int mid = ((int)(Math.ceil(((double)n)/2) - 1));
+    	System.out.println("Mid:" + mid);
+    	
+    	XYPoint[] XL = new XYPoint[mid+1];
+    	XYPoint[] XR = new XYPoint[pointsByX.length - XL.length];
+    	System.out.println("Left length: " + XL.length);
+    	System.out.println("Right length: " + XR.length);
+    	
+    	
+    	int xL = 0;
+    	for(int i = 0; i < mid+1; i++)
+    	{
+    		XL[xL] = pointsByX[i];
+    		xL++;
+    	}
+    	
+    	int xR = 0;
+    	for(int j = mid+1; j < pointsByX.length; j++)
+    	{
+    		XR[xR] = pointsByX[j];
+    		xR++;
+    	}
+    	
+    	XYPoint[] YL = new XYPoint[mid+1];
+    	XYPoint[] YR = new XYPoint[pointsByY.length - (mid+1)];
+    	
+    	int yL = 0;
+    	int yR = 0;
+    	XYPoint midpoint = pointsByX[mid]; 
+    	
+    	for(int y = 0; y < pointsByY.length; y++)
+    	{
+    		if(pointsByY[y].isLeftOf(midpoint) || pointsByY[y].num == midpoint.num)  //left half includes midpoint
+    		{
+    			YL[yL] = pointsByY[y];
+    			yL++;
+    		}
+    		else
+    		{
+    			YR[yR] = pointsByY[y];
+    			yR++;
+    		}
+    	}
+    	
+    	XYPoint[] closestLeft = closestPairRecurse(XL,YL, XL.length);
+    	XYPoint[] closestRight = closestPairRecurse(XR, YR, XR.length);
+    	
+    	double distL = closestLeft[0].dist(closestLeft[1]);
+    	double distR = closestRight[0].dist(closestRight[1]);
+    	
+    	double distLR = distL;
+    	XYPoint[] closestLR = new XYPoint[2];
+    	
+    	if(distR < distL)
+    	{
+    		closestLR[0] = closestRight[0];
+    		closestLR[1] = closestRight[1];
+    	}
+    	else
+    	{
+    		closestLR[0] = closestLeft[0];
+    		closestLR[1] = closestLeft[1];
+    	}
+    	
+    	XYPoint[] closestCombine = Combine(pointsByY, pointsByX[mid], pointsByY.length, distLR);
+    	
+    	if(closestCombine[0] == null) //combine couldn't find anything better
+    		return closestLR;
+    	else
+    		return closestCombine;
+    	
+    	
+    }
+    
+    public static XYPoint[] Combine(XYPoint[] pointsByY, XYPoint midpoint, int n, double distLR)
+    {
+    	XYPoint[] result = new XYPoint[2];
+    	
+    	int count = 0;
+    	for(int y = 0; y < pointsByY.length; y++)
+    	{
+    		if(Math.abs(pointsByY[y].x - midpoint.x) < distLR)
+    		{
+    			count++;
+    		}
+    	}
+    	
+    	XYPoint[] yStrip = new XYPoint[count];
+    	
+    	int yS = 0;
+    	for(int y = 0; y < pointsByY.length; y++)
+    	{
+    		if(Math.abs(pointsByY[y].x - midpoint.x) < distLR)
+    		{
+    			yStrip[yS] = pointsByY[y];
+    			yS++;
+    		}
+    	}
+    	
+    	for(int j = 0; j < yStrip.length-2; j++)
+    	{
+    		int k = j+1;
+    		
+    		while(k <= yStrip.length-1 && yStrip[k].y - yStrip[j].y < distLR)
+    		{
+    			result[0] = yStrip[k];
+    			result[1] = yStrip[j];
+    			k++;
+    		}
+    	}
+    	
+    	return result;
+    }
+}
